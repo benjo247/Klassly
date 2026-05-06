@@ -1,1 +1,35 @@
+name: 🏫 Schuldaten aktualisieren
 
+on:
+  schedule:
+    - cron: "0 4 * * 1"
+  workflow_dispatch:
+
+jobs:
+  update-schools:
+    name: CSV importieren → Neon
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Python 3.11 einrichten
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Pakete installieren
+        run: pip install requests pandas psycopg2-binary
+
+      - name: Schuldaten laden & importieren
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: python scripts/update_schools.py
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## 🏫 Schuldaten-Update" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${{ job.status }}" >> $GITHUB_STEP_SUMMARY
